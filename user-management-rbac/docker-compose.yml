@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: rbac-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: user_management
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - rbac-net
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rbac-rabbitmq
+    ports:
+      - "5672:5672"    # RabbitMQ AMQP
+      - "15672:15672"  # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - rbac-net
+
+  app:
+    build: .
+    container_name: rbac-app
+    depends_on:
+      - db
+      - rabbitmq
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/user_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+
+      # RabbitMQ connection
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+
+      # event exchange (maps to app.events.exchange)
+      APP_EVENTS_EXCHANGE: rbac.events
+    networks:
+      - rbac-net
+
+networks:
+  rbac-net:
+
+volumes:
+  db_data:
