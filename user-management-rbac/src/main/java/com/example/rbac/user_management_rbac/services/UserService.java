@@ -36,7 +36,6 @@ public class UserService {
                 .map(Role::getName)
                 .collect(Collectors.toList());
 
-        // if you have display name separate, you can expose that instead of user.getUsername()
         return new UserProfileResponse(
                 user.getId(),
                 user.getUsername(), // or user.getEmail(), or a custom getDisplayName()
