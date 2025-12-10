@@ -1,138 +1,229 @@
+# **User Management System (RBAC)**  
+### **Spring Boot · JWT · RBAC · MySQL · RabbitMQ · Docker**
 
-User Management System (RBAC)
+A production-ready Role-Based Access Control (RBAC) system built using Spring Boot, featuring secure JWT authentication, user management, role assignments, admin-only access, event publishing via RabbitMQ, and full Docker Compose deployment with MySQL and RabbitMQ.
 
-A Spring Boot–based RBAC application that manages user registration, login, and role assignments, 
-with JWT security and Docker-ready deployment including MySQL and RabbitMQ.
+---
 
+## 🚀 **Features**
 
-Spring Boot · JWT · RBAC · MySQL · RabbitMQ · Docker
+- **User Registration**
+- **JWT-based Login & Authentication**
+- **Role Assignment (RBAC)**
+- **Admin-Only Protected Endpoints**
+- **RabbitMQ Event Publishing**
+- **Docker + Docker Compose Deployment**
+- **Layered Architecture (Controller → Service → Repository)**
 
-This project is a Role-Based Access Control (RBAC) system implementing:
+---
 
-User Registration
-Login with JWT Authentication
-Role Assignment
-Admin-Only Endpoints
-Event Publishing via RabbitMQ
-Docker + Docker Compose deployment
-Layered Architecture (Controller → Service → Repository)
+## 📂 **Project Structure**
 
-Project Structure
+```text
 src/main/java/com.example.rbac.user_management_rbac
-├── controller
-├── dto
-├── service
-├── repository
-├── security
-├── events
-└── model
+ ├── controller
+ ├── dto
+ ├── service
+ ├── repository
+ ├── security
+ ├── events
+ └── model
+```
 
-LOCAL SETUP (without Docker)
-1 Install Dependencies
- Java 17
- Maven
- MySQL running locally
+## 🖥️ Local Setup (Without Docker)
 
-Create user_management database:
+### 1️⃣ Install Dependencies
+
+- Java 17  
+- Maven  
+- MySQL running locally  
+
+Create the `user_management` database:
+
+```sql
 CREATE DATABASE user_management;
+```
+### Update `application.properties`
 
-Update application.properties:
+Add the following configuration inside:
+
+```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/user_management
 spring.datasource.username=root
 spring.datasource.password=your_password
 spring.jpa.hibernate.ddl-auto=update
+```
+## ▶️ Run Application Locally
 
-2️ Run Application Locally
-Using Maven:
+Using Maven Wrapper:
+
+```bash
 ./mvnw spring-boot:run
+```
+## 🐳 DOCKER SETUP (Recommended)
 
-DOCKER SETUP (recommended)
-This application comes with a docker-compose.yml that runs:
+This application comes with a `docker-compose.yml` that runs:
 
-✔ Spring Boot App
-✔ MySQL
-✔ RabbitMQ
+✔ **Spring Boot App**  
+✔ **MySQL**  
+✔ **RabbitMQ**
 
-1️ Build Application JAR
+### 1️⃣ Build Application JAR
+
+```bash
 mvn clean package -DskipTests
+```
+### 2️⃣ Start All Services
 
-2️ Start All Services
-docker-compose up --build
+Run the following command:
+
+    docker-compose up --build
 
 This launches three containers:
 
-Service	Container Name	Ports
-MySQL	rbac-mysql	3307 → 3306
-RabbitMQ	rbac-rabbitmq	5672, 15672
-Spring Boot App	rbac-app	8080
+| Service          | Container Name   | Ports        |
+|------------------|------------------|--------------|
+| MySQL            | rbac-mysql       | 3307 → 3306  |
+| RabbitMQ         | rbac-rabbitmq    | 5672, 15672  |
+| Spring Boot App  | rbac-app         | 8080         |
 
-Database Schema Setup
-Tables are created automatically via JPA.
-Main tables:
+## 🗄️ Database Schema Setup
 
+Tables are created automatically via **JPA/Hibernate**.
+
+### Main Tables
+
+#### `USERS`
+
+Fields:
+
+- `id`
+- `username`
+- `email`
+- `password`
+- `enabled`
+
+Example structure:
+
+```text
 USERS
-id | username | email | password | enabled
+-----
+id | username | email           | password      | enabled
 
 ROLES
+-----
 id | name
 
 USERS_ROLES (Mapping Table)
+-----
 user_id | role_id
+```
+### To assign ADMIN role to the first user:
 
-To assign ADMIN to first user:
+```sql
 INSERT INTO roles(name) VALUES ('ROLE_ADMIN');
-INSERT INTO users_roles(user_id, role_id) VALUES (1,1);
+INSERT INTO users_roles(user_id, role_id) VALUES (1, 1);
+```
+## 📡 API Endpoints
 
-API Endpoints
+---
 
-Register User
+### 🧾 Register User
+
+**Endpoint:**
 POST /api/users/register
-{
-"username": "john",
-"email": "john@gmail.com",
-"password": "password123"
-}
 
-Login
+**Request Body:**
+
+```json
+{
+  "username": "john",
+  "email": "john@gmail.com",
+  "password": "password123"
+}
+```
+### 🔐 Login
+
+**Endpoint:**
 POST /api/users/login
-{
-"email": "john@gmail.com",
-"password": "password123"
-}
 
-Get Profile (Authenticated)
+
+**Request Body:**
+
+```json
+{
+  "email": "john@gmail.com",
+  "password": "password123"
+}
+```
+### 👤 Get Profile (Authenticated)
+
+**Endpoint:**
 GET /api/users/me
 
-Headers:Authorization: Bearer <token>
+Returns the user's id, username, email, and assigned roles
 
-Create Role (Admin Only)
-Use Admin token only
+### 🛠 Create Role (Admin Only)
+
+Use **Admin token only**
+
+**Endpoint:**
 
 POST /api/roles
 
-{ "name": "ROLE_MANAGER" }
 
-Assign Role to User (Admin Only)
+**Request Body:**
 
-POST /api/users/{id}/roles
+```json
+{
+  "name": "ROLE_MANAGER"
+}
+```
+### 🎭 Assign Role to User (Admin Only)
 
-{ "roles": ["ROLE_ADMIN"] }
+**Endpoint:**
+POST  /api/users/{id}/roles
 
-Admin Stats Endpoint
+
+**Request Body:**
+
+```json
+{
+  "roles": ["ROLE_ADMIN"]
+}
+```
+### 📊 Admin Stats Endpoint
+
+**Endpoint:**
 
 GET /api/admin/stats
 
-Returns mock stats:
 
+**Example Response:**
+
+```json
 {
-"totalUsers": 10,
-"activeAdmins": 2,
-"timestamp": "2025-12-10T12:00:00"
+  "totalUsers": 10,
+  "activeAdmins": 2,
+  "timestamp": "2025-12-10T12:00:00"
 }
+```
+### 📨 RabbitMQ Events
 
-RabbitMQ Events
+RabbitMQ Dashboard:
 
-RabbitMQ dashboard:
 http://localhost:15672
+
+**Default Credentials:**
+
 User: guest
 Pass: guest
+
+
+
+
+
+
+
+
+
